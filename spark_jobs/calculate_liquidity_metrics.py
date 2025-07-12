@@ -30,16 +30,6 @@ def write_to_s3(df, output_path):
     """Writes the processed data to S3"""
     df.write.mode("overwrite").parquet(output_path)
 
-def wait_for_job_completion(spark):
-    """Wait for all jobs to complete before stopping Spark"""
-    while True:
-        active_jobs = spark.sparkContext.statusTracker().getJobIdsForGroup(None)
-        if len(active_jobs) == 0:  # No active jobs
-            break
-        logging.info(f"Active jobs: {active_jobs}. Waiting for completion...")
-        time.sleep(1)  # Poll every second
-    logging.info("All Spark jobs completed.")
-
 def main():
     """Main function to execute the data pipeline"""
     s3_input = "s3a://liquidity-pipeline-data/raw/market_feed/market_feed_sample.csv"
@@ -77,9 +67,6 @@ def main():
     finally:
         logging.info("Clearing cache...")
         spark.catalog.clearCache()
-
-        logging.info("Waiting for all jobs to finish before stopping Spark...")
-        wait_for_job_completion(spark, timeout_seconds=600)
 
         logging.info("Stopping Spark session and context...")
         spark.sparkContext.stop()  # Explicitly stop the Spark context
