@@ -76,17 +76,16 @@ def main():
 
     finally:
         logging.info("Clearing cache...")
-        spark.catalog.clearCache()  # Clear lingering data in memory
+        spark.catalog.clearCache()
 
         logging.info("Waiting for all jobs to finish before stopping Spark...")
-        wait_for_job_completion(spark)  # Wait for jobs to complete
+        wait_for_job_completion(spark, timeout_seconds=600)
 
-        logging.info("Stopping Spark session...")
-        spark.stop()  # Stop the Spark session gracefully
+        logging.info("Stopping Spark session and context...")
+        spark.sparkContext.stop()  # Explicitly stop the Spark context
+        spark.stop()
         logging.info("Spark session stopped.")
 
-        # Do not call System.exit() here, as it causes issues with Py4J in Spark.
-        # Just let Python exit naturally.
 
 if __name__ == "__main__":
     main()
