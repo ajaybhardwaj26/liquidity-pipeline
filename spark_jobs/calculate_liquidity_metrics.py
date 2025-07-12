@@ -22,24 +22,36 @@ def write_to_s3(df, output_path):
     df.write.mode("overwrite").parquet(output_path)
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     s3_input = "s3a://liquidity-pipeline-data/raw/market_feed/market_feed_sample.csv"
     s3_output = "s3a://liquidity-pipeline-data/processed/liquidity_metrics/"
 
+    # Start Spark session
+    logging.info("Starting Spark session...")
     spark = SparkSession.builder.appName("LiquidityPipeline").getOrCreate()
 
-    raw_df = read_raw_data(spark, s3_input)
+    try:
+        raw_df = read_raw_data(spark, s3_input)
 
-    rows = raw_df.select("timestamp").collect()
-    for row in rows:
-        print(f"Raw timestamp value: {row['timestamp']}")
+        rows = raw_df.select("timestamp").collect()
+        for row in rows:
+            print(f"Raw timestamp value: {row['timestamp']}")
 
+        processed_df = clean_and_transform(raw_df)
+        write_to_s3(processed_df, s3_output)
+        logging.info("Data written to S3")
 
-    processed_df = clean_and_transform(raw_df)
-    write_to_s3(processed_df, s3_output)
-    print(f"Data written")
+    except Exception as e:
+        logging.error(f"Error occurred: {e}")
 
-    spark.stop()
-    print(f"spark stopped")
+    finally:
+        logging.info("Clearing cache...")
+        spark.catalog.clearCache()  # Clear any lingering data in memory
+
+        logging.info("Stopping Spark session...")
+        time.sleep(2)  # Add delay to allow print messages to appear before stopping Spark
+        spark.stop()
+        logging.info("Spark stopped")
 
 if __name__ == "__main__":
     main()
