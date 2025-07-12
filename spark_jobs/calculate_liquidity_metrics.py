@@ -3,7 +3,6 @@ import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp
 from pyspark.sql.window import Window
-import sys
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -81,13 +80,13 @@ def main():
 
         logging.info("Waiting for all jobs to finish before stopping Spark...")
         wait_for_job_completion(spark)  # Wait for jobs to complete
+
         logging.info("Stopping Spark session...")
         spark.stop()  # Stop the Spark session gracefully
         logging.info("Spark session stopped.")
 
-        # Exit the JVM after the Spark job completes
-        logging.info("Exiting JVM gracefully...")
-        spark.sparkContext._gateway.jvm.System.exit(0)  # Exit JVM after successful completion
+        # Do not call System.exit() here, as it causes issues with Py4J in Spark.
+        # Just let Python exit naturally.
 
 if __name__ == "__main__":
     main()
