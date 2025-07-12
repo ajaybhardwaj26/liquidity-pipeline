@@ -1,5 +1,5 @@
-import time
 import logging
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp
 from pyspark.sql.window import Window
@@ -36,8 +36,8 @@ def main():
     s3_output = "s3a://liquidity-pipeline-data/processed/liquidity_metrics/"
 
     try:
-        # Initialize the Spark session
         logging.info("Starting Spark session...")
+        # Start Spark session
         spark = SparkSession.builder.appName("LiquidityPipeline").getOrCreate()
 
         # Read the raw data
@@ -61,20 +61,19 @@ def main():
 
     except Exception as e:
         logging.error(f"Error occurred: {e}")
-        # Optionally log the full stack trace
         import traceback
         logging.error(traceback.format_exc())
 
     finally:
-        # Clear cache and stop the Spark session
         logging.info("Clearing cache...")
         spark.catalog.clearCache()  # Clear lingering data in memory
 
-        logging.info("Stopping Spark session...")
-        time.sleep(2)  # Wait for logs to appear before stopping Spark
+        # Ensure all tasks are complete before stopping Spark
+        logging.info("Waiting for Spark jobs to finish...")
+        spark.sparkContext.parallelize([1]).count()  # Trigger job completion
+        logging.info("All jobs completed. Stopping Spark session...")
 
-        # Gracefully stop the Spark session
-        logging.info("Stopping Spark...")
+        # Stop Spark session gracefully
         spark.stop()
         logging.info("Spark stopped.")
 
