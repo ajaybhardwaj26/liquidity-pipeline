@@ -1,4 +1,5 @@
 import logging
+import findspark
 import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp
@@ -30,9 +31,7 @@ def write_to_s3(df, output_path):
     df.write.mode("overwrite").parquet(output_path)
 
 def main():
-    import findspark
     findspark.init()
-    import pyspark
     print(pyspark.__file__)
 
 
