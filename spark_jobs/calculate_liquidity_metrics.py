@@ -68,8 +68,7 @@ def main():
         logging.info("Clearing cache...")
         spark.catalog.clearCache()
 
-        logging.info("Stopping Spark session and context...")
-        spark.sparkContext.stop()  # Explicitly stop the Spark context
+        logging.info("Stopping Spark..")
         spark.stop()
         logging.info("Spark session stopped.")
 
