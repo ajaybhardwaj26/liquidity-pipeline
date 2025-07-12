@@ -53,7 +53,9 @@ def main():
         logging.info("Stopping Spark session...")
         time.sleep(2)  # Add delay to allow print messages to appear before stopping Spark
         spark.stop()
-        logging.info("Spark stopped")
+        sc = spark.sparkContext
+        sc.stop()  # Force stop SparkContext
+        logging.info("Spark session stopped")
 
 if __name__ == "__main__":
     main()
