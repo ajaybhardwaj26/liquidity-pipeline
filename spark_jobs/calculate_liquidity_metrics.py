@@ -33,7 +33,11 @@ def write_to_s3(df, output_path):
 
 def wait_for_job_completion(spark):
     """Wait for all jobs to complete before stopping Spark"""
-    while len(spark.sparkContext.statusTracker().getActiveJobIds()) > 0:
+    while True:
+        active_jobs = spark.sparkContext.statusTracker().getJobIdsForGroup(None)
+        if len(active_jobs) == 0:  # No active jobs
+            break
+        logging.info(f"Active jobs: {active_jobs}. Waiting for completion...")
         time.sleep(1)  # Poll every second
     logging.info("All Spark jobs completed.")
 
