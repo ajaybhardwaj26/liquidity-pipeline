@@ -36,7 +36,7 @@ def main():
     print(pyspark.__file__)
 
 
-"""Main function to execute the data pipeline"""
+    """Main function to execute the data pipeline"""
     s3_input = "s3a://liquidity-pipeline-data/raw/market_feed/market_feed_sample.csv"
     s3_output = "s3a://liquidity-pipeline-data/processed/liquidity_metrics/"
 
