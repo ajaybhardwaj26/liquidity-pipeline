@@ -36,9 +36,10 @@ def main():
 
     processed_df = clean_and_transform(raw_df)
     write_to_s3(processed_df, s3_output)
-    print(f"Data written to {output_path}.")
+    print(f"Data written")
 
     spark.stop()
     print(f"spark stopped")
+
 if __name__ == "__main__":
     main()
