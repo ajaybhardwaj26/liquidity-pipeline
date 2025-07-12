@@ -3,7 +3,6 @@ import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp
 from pyspark.sql.window import Window
-
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +30,13 @@ def write_to_s3(df, output_path):
     df.write.mode("overwrite").parquet(output_path)
 
 def main():
-    """Main function to execute the data pipeline"""
+    import findspark
+    findspark.init()
+    import pyspark
+    print(pyspark.__file__)
+
+
+"""Main function to execute the data pipeline"""
     s3_input = "s3a://liquidity-pipeline-data/raw/market_feed/market_feed_sample.csv"
     s3_output = "s3a://liquidity-pipeline-data/processed/liquidity_metrics/"
 
