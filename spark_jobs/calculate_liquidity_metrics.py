@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp, expr
 from pyspark.sql.window import Window
+import logging
 def read_raw_data(spark, s3_path):
     return spark.read.format("csv") \
         .option("header", "true") \
