@@ -3,6 +3,8 @@ import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lag, to_timestamp
 from pyspark.sql.window import Window
+import sys
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
@@ -29,10 +31,13 @@ def write_to_s3(df, output_path):
     """Writes the processed data to S3"""
     df.write.mode("overwrite").parquet(output_path)
 
+def wait_for_job_completion(spark):
+    """Wait for all jobs to complete before stopping Spark"""
+    while len(spark.sparkContext.statusTracker().getActiveJobIds()) > 0:
+        time.sleep(1)  # Poll every second
+    logging.info("All Spark jobs completed.")
+
 def main():
-    print(pyspark.__file__)
-
-
     """Main function to execute the data pipeline"""
     s3_input = "s3a://liquidity-pipeline-data/raw/market_feed/market_feed_sample.csv"
     s3_output = "s3a://liquidity-pipeline-data/processed/liquidity_metrics/"
@@ -70,14 +75,15 @@ def main():
         logging.info("Clearing cache...")
         spark.catalog.clearCache()  # Clear lingering data in memory
 
-        # Ensure all tasks are complete before stopping Spark
-        logging.info("Waiting for Spark jobs to finish...")
-        spark.sparkContext.parallelize([1]).count()  # Trigger job completion
-        logging.info("All jobs completed. Stopping Spark session...")
+        logging.info("Waiting for all jobs to finish before stopping Spark...")
+        wait_for_job_completion(spark)  # Wait for jobs to complete
+        logging.info("Stopping Spark session...")
+        spark.stop()  # Stop the Spark session gracefully
+        logging.info("Spark session stopped.")
 
-        # Stop Spark session gracefully
-        spark.stop()
-        logging.info("Spark stopped.")
+        # Exit the JVM after the Spark job completes
+        logging.info("Exiting JVM gracefully...")
+        spark.sparkContext._gateway.jvm.System.exit(0)  # Exit JVM after successful completion
 
 if __name__ == "__main__":
     main()
